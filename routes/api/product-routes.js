@@ -2,52 +2,42 @@ const router = require('express').Router();
 const { Product, product, Tag, ProductTag } = require('../../models');
 
 // The `/api/products` endpoint
-
-// get all products
+// get all products - includes product and Tag data
 router.get('/', async (req, res) => {
 
-  const products = await product.findAll();
 
-  if(!products){
-    res.status(404).json(products)
+  try{
+    const products = await Product.findAll({include: {model: Tag}});
+
+    if(!products){
+      res.status(404).json(products)
+    }
+    res.status(200).json(products);
+  } catch(err){
+    console.error(err);
+    res.status(500).json({message: "Internal Server Error"})
   }
-  res.status(200).json(products);
-  // find all products
-  // be sure to include its associated product and Tag data
+  
 });
 
-// get one product
+// get one product by ID, include product and Tag Data
 router.get('/:id', async(req, res) => {
-  const product = await product.findByPk(req.params.id);
+  try{
+    const product = await Product.findByPk(req.params.id, {include:  {model: Tag}});
 
-  if(!product){
-    res.status(404).json(product)
+    if(!product){
+      res.status(404).json(product)
+    }
+    res.status(200).json(product);
+  } catch(err){
+    console.error(err);
+    res.status(500).json({message: "Internal Server Error"})
   }
-  res.status(200).json(product);
-  // find a single product by its `id`
-  // be sure to include its associated product and Tag data
+  
 });
 
 // create new product
 router.post('/', async(req, res) => {
-
-  try{
-    const product = await product.create({
-    product_name: req.body.product_name
-  })
-
-  res.status(200).json(product)
-  } catch(err){
-    res.status(400).json(err)
-  }
-  /* req.body should look like this...
-    {
-      product_name: "Basketball",
-      price: 200.00,
-      stock: 3,
-      tagIds: [1, 2, 3, 4]
-    }
-  */
   Product.create(req.body)
     .then((product) => {
       // if there's product tags, we need to create pairings to bulk create in the ProductTag model
@@ -118,7 +108,7 @@ router.put('/:id', async(req, res) => {
 router.delete('/:id', async(req, res) => {
   // delete one product by its `id` value
   try {
-    const product = await Pategory.findByPk(req.params.id);
+    const product = await Product.findByPk(req.params.id);
     
     if (!product) {
       return res.status(404).json({ error: 'product not found' });

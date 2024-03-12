@@ -8,14 +8,24 @@ const { Category, category, Product } = require('../../models');
 // find all categories
 // be sure to include its associated categorys
 router.get('/', async(req, res) => {
-  const categories = await Category.findAll({
-    include: {model: Product}
-  });
 
-  if(!categories){
-    res.status(404).json(categories)
+  try{
+    const categories = await Category.findAll({
+      include: {model: Product}
+    });
+
+    if(!categories){
+      res.status(404).json(categories)
+    }
+
+    console.log("Successful GET request for all categories!")
+    res.status(200).json(categories);
+  } catch(err){
+    console.error(err)
+    res.status(500).json({message: "Internal Server Error"})
   }
-  res.status(200).json(categories);
+  
+  
 });
 
 
@@ -23,29 +33,33 @@ router.get('/', async(req, res) => {
   // be sure to include its associated categorys
 router.get('/:id', async(req, res) => {
 
-  const category = await Category.findByPk(req.params.id);
+  try{
+    const category = await Category.findByPk(req.params.id, {include: {model: Product}});
 
-  if(!category){
-    res.status(404).json(category)
+    if(!category){
+      res.status(404).json(category)
+    }
+    res.status(200).json(category);
+  } catch(err){
+    console.error(err);
+    res.status(500).json({message: "Internal Server Error"})
   }
-  res.status(200).json(category);
+
+  
 });
 
 // create a new category
 router.post('/', async(req, res) => {
-
   try{
     const category = await Category.create({
-    category_name: req.body.category_name
-  })
+      category_name: req.body.category_name
+    })
 
-  res.status(200).json(category)
+    res.status(200).json(category);
   } catch(err){
-    res.status(400).json(err)
+    console.error("Error creating new Category", err)
+    res.status(500).json({message: "Internal Server Error"})
   }
-  
-
-  
   
 });
 
@@ -55,18 +69,18 @@ router.put('/:id', async (req, res) => {
     const category = await Category.findByPk(req.params.id);
 
     if(!category){
-      return res.status(404).json({ error: 'catgory not found'})
+      return res.status(404).json({ error: 'Category not found'});
     }
     category.update(
     {
       category_name: req.body.category_name
     }
-    )
+    );
 
-    res.status(200).json(category)
+    res.status(200).json(category);
   } catch(err){
     console.error('Error updating category:', error);
-    res.status(500).json({ error: 'Failed to update category' });
+    res.status(500).json({ error: 'Failed to update category, Internal Server Error' });
   }
   
 });
