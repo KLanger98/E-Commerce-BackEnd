@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
     const tags = await Tag.findAll({include: {model: Product}});
 
     if(!tags){
-      res.status(404).json(tags)
+      return res.status(404).json(tags)
     }
     res.status(200).json(tags);
   } catch(err){
@@ -27,7 +27,7 @@ router.get('/:id', async (req, res) => {
     const tag = await Tag.findByPk(req.params.id, {include: {model: Product}});
 
     if(!tag){
-      res.status(404).json({error: "Tag not found"})
+      return res.status(404).json({error: "Tag not found"})
     }
     res.status(200).json(tag);
   } catch(err){
@@ -53,16 +53,17 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   // update a tag's name by its `id` value
   try{
-    const tag = await Tag.findByPk(req.params.id);
+    const exists = await Tag.findByPk(req.params.id);
 
-    if(!tag){
+    if(!exists){
       return res.status(404).json({ error: 'Tag not found'});
     }
-    tag.update(
-    {
-      tag_name: req.body.tag_name
-    }
-    );
+
+    let tag = await Tag.update(req.body, {where:
+      {
+        id: req.params.id
+      }},
+    )
 
     res.status(200).json(tag);
   } catch(err){
@@ -74,13 +75,17 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   // delete on tag by its `id` value
   try {
-    const tag = await Tag.findByPk(req.params.id);
+    const exists = await Tag.findByPk(req.params.id);
     
-    if (!tag) {
+    if (!exists) {
       return res.status(404).json({ error: 'Tag not found' });
     }
 
-    await tag.destroy();
+    let tag = await Tag.destroy({where:
+      {
+        id: req.params.id
+      }},
+      )
 
     res.status(200).json(tag);
   } catch (error) {

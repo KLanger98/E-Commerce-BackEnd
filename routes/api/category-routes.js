@@ -3,19 +3,16 @@ const { Category, category, Product } = require('../../models');
 
 // The `/api/categories` endpoint
 
-
-
 // find all categories
 // be sure to include its associated categorys
 router.get('/', async(req, res) => {
-
   try{
     const categories = await Category.findAll({
       include: {model: Product}
     });
 
     if(!categories){
-      res.status(404).json(categories)
+      return res.status(404).json(categories)
     }
 
     console.log("Successful GET request for all categories!")
@@ -24,8 +21,6 @@ router.get('/', async(req, res) => {
     console.error(err)
     res.status(500).json({message: "Internal Server Error"})
   }
-  
-  
 });
 
 
@@ -37,8 +32,9 @@ router.get('/:id', async(req, res) => {
     const category = await Category.findByPk(req.params.id, {include: {model: Product}});
 
     if(!category){
-      res.status(404).json(category)
+      return res.status(404).json(category)
     }
+    
     res.status(200).json(category);
   } catch(err){
     console.error(err);
@@ -66,18 +62,18 @@ router.post('/', async(req, res) => {
 // update a category by its `id` value
 router.put('/:id', async (req, res) => {
   try{
-    const category = await Category.findByPk(req.params.id);
+    const exists = await Category.findByPk(req.params.id);
 
-    if(!category){
+    if(!exists){
       return res.status(404).json({ error: 'Category not found'});
     }
-    category.update(
-    {
-      category_name: req.body.category_name
-    }
-    );
+    let category = await Category.update(req.body, {where: 
+      {
+        id: req.params.id,
+      },
+    })
 
-    res.status(200).json(category);
+    return res.json(category);
   } catch(err){
     console.error('Error updating category:', error);
     res.status(500).json({ error: 'Failed to update category, Internal Server Error' });
@@ -89,13 +85,17 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
 
   try {
-    const category = await Category.findByPk(req.params.id);
+    const exists = await Category.findByPk(req.params.id);
     
-    if (!category) {
+    if (!exists) {
       return res.status(404).json({ error: 'category not found' });
     }
 
-    await category.destroy();
+    let category = await Category.destroy({where: 
+      {
+        id: req.params.id
+      },
+    });
 
     res.status(200).json(category);
   } catch (error) {

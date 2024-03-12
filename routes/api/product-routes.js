@@ -7,10 +7,10 @@ router.get('/', async (req, res) => {
 
 
   try{
-    const products = await Product.findAll({include: {model: Tag}});
+    const products = await Product.findAll({include: {model: Tag}} );
 
     if(!products){
-      res.status(404).json(products)
+      return res.status(404).json(products)
     }
     res.status(200).json(products);
   } catch(err){
@@ -26,7 +26,7 @@ router.get('/:id', async(req, res) => {
     const product = await Product.findByPk(req.params.id, {include:  {model: Tag}});
 
     if(!product){
-      res.status(404).json(product)
+      return res.status(404).json(product)
     }
     res.status(200).json(product);
   } catch(err){
@@ -108,13 +108,18 @@ router.put('/:id', async(req, res) => {
 router.delete('/:id', async(req, res) => {
   // delete one product by its `id` value
   try {
-    const product = await Product.findByPk(req.params.id);
+    const exists = await Product.findByPk(req.params.id);
     
-    if (!product) {
+    if (!exists) {
       return res.status(404).json({ error: 'product not found' });
     }
 
-    await product.destroy();
+    let product = await Product.destroy(
+      {where:
+      {
+        id: req.params.id
+      }},
+    )
 
     res.status(200).json(product);
   } catch (error) {
